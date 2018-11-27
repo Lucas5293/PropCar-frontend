@@ -10,7 +10,7 @@
             <th>Cor</th>
           </tr>
           <tbody>
-            <tr v-for="carro in carrosAssociaveis">
+            <tr v-for="carro in carrosAssociaveis" :key="carro.id">
               <td>{{carro.id}}</td>
               <td>{{carro.modelo}}</td> 
               <td>{{carro.cor}}</td>
@@ -30,7 +30,7 @@
             <th>Cor</th>
           </tr>
           <tbody>
-            <tr v-for="carro in carrosAssociaveis">
+            <tr v-for="carro in carrosAssociaveis" :key="carro.id">
               <td>{{carro.id}}</td>
               <td>{{carro.modelo}}</td> 
               <td>{{carro.cor}}</td>

@@ -2,42 +2,92 @@
   <div id="automovel-crud-componente" class="componente">
     <h3>Cadastro Carros</h3>
     <table id="crudauto">
-      <tr>
-        <td>
-          Carro:</td><td><input type="text" name="carro">
-        </td>
-      </tr>
-      <tr>
+      <!--<tr>
         <td>
           ID:</td><td> <input type="text" name="id">
         </td>
-      </tr>
+      </tr>-->
       <tr>
         <td>
-          Modelo:</td><td> <input type="text" name="modelo">
+          Modelo:</td>
+        <td>
+          <input type="text" v-model="carroEdit.modelo">
         </td>
       </tr>
       <tr>
         <td>
-          Cor:</td><td> <input type="text" name="cor">
+          Cor:
+        </td>
+        <td> 
+          <input type="text" v-model="carroEdit.cor">
         </td>
       </tr>
       <tr>
         <td>
-          RENAVAM:</td><td> <input type="text" name="renavam">
+          RENAVAM:
+        </td>
+        <td>
+          <input type="text" v-model="carroEdit.renavam">
         </td>
       <tr>
-        <td></td><td><input type="button" value="Enviar"></td>
+        <td></td><td><button v-on:click="salvarCarro()" >Enviar</button></td>
       </tr>
+    </table>
+    <table class="table">
+       <tr>
+          <th>Id</th>
+          <th>Modelo</th> 
+          <th>Cor</th>
+        </tr>
+        <tbody>
+          <tr v-for="carro in carros" :key="carro.id">
+            <td>{{carro.id}}</td>
+            <td>{{carro.modelo}}</td> 
+            <td>{{carro.cor}}</td>
+          </tr>
+        </tbody>
     </table>
   </div>
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   name: 'AutomovelCrudComponent',
-  props: {
-    msg: String
+  data() {
+    return {
+      carroEdit: {}
+    } 
+  },
+  computed: {
+    carros: {
+      get () {
+        return this.$store.state.carros
+      },
+      set (valor) {
+        this.$store.state.carros = valor
+      }
+    }
+  },
+  methods:{
+    salvarCarro() {
+      axios.post('/automovel', this.carroEdit)
+      .then(res => {
+        this.carros = res.data
+        this.obtemListaCarros();
+        this.carroEdit = {};
+      }).catch(error => console.log(error))
+    },
+    obtemListaCarros() {
+      axios.get('/automoveis', { headers: { Accept: 'application/json' } })
+      .then(res => {
+        this.carros = res.data
+      }).catch(error => console.log(error))
+    }
+  },
+  created () {
+    this.obtemListaCarros();
   }
 }
 </script>

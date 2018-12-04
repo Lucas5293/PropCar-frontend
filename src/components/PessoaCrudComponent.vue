@@ -77,7 +77,7 @@ export default {
   },
   methods:{
     salvarPessoa() {
-      axios.post('/pessoas', this.pessoaEdit)
+      axios.post('/pessoas', this.pessoaEdit, {headers: { Authorization: this.$store.state.token}})
       .then(res => {
         this.pessoas = res.data
         this.obtemListaPessoas();
@@ -85,7 +85,7 @@ export default {
       }).catch(error => console.log(error))
     },
     obtemListaPessoas() {
-      axios.get('/pessoas', { headers: { Accept: 'application/json' } })
+      axios.get('/pessoas', { headers: { Accept: 'application/json', Authorization: this.$store.state.token}})
       .then(res => {
         this.pessoas = res.data
       }).catch(error => console.log(error))

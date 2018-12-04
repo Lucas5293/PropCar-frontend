@@ -14,8 +14,8 @@ export default new Vuex.Store({
     vuexPersist.plugin
   ],
   state: {
-    carros: [],
-    pessoas: []
+    pessoas: [],
+    token: null
   },
   mutations: {
 

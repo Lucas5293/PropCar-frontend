@@ -1,57 +1,63 @@
 <template>
   <div id="slice-componente" class="componente">
-    <h5>Selecione uma pessoa e arraste pra associar (simples assim)!</h5>
-    <label>Pessoa: </label>
-    <select v-model="pessoaSelecionada">
-      <option disabled selected>Selecione</option>
-      <option v-for="pessoa in pessoas" :key="pessoa.id" v-bind:value="pessoa">
-          {{pessoa.nome}}
-      </option>
-    </select>
-    <div class="row">
-      <div class="col-sm-5">
-        <table class="table" style="width:100%">
-          <tr>
-            <th>Id</th>
-            <th>Modelo</th> 
-            <th>Cor</th>
-          </tr>
-          <tbody>
-            <tr v-for="carro in carrosDisponiveis" :key="carro.id" 
-                 :class="{'selected': carro === carroSelecionado}"
-                 @click="selecionaCarro(carro);">
-              <td>{{carro.id}}</td>
-              <td>{{carro.modelo}}</td> 
-              <td>{{carro.cor}}</td>
+    <div v-if="mostrarSecaoCarros">
+      <h5>Selecione uma pessoa e arraste pra associar (simples assim)!</h5>
+      <label>Pessoa: </label>
+      <select v-model="pessoaSelecionada">
+        <option disabled selected>Selecione</option>
+        <option v-for="pessoa in pessoas" :key="pessoa.id" v-bind:value="pessoa">
+            {{pessoa.nome}}
+        </option>
+      </select>
+      <div class="row">
+        <div class="col-sm-5">
+          <table class="table" style="width:100%">
+            <tr>
+              <th>Id</th>
+              <th>Modelo</th> 
+              <th>Cor</th>
             </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="col-sm-2">
-        <button @click="desassocia()" :disabled="this.pessoaSelecionada.id == null">&lt;&lt;</button>
-        <button @click="associa()" :disabled="this.pessoaSelecionada.id == null">&gt;&gt;</button>
-      </div>
-      <div class="col-sm-5">
-        <table class="table" style="width:100%">
-          <tr>
-            <th>Id</th>
-            <th>Modelo</th> 
-            <th>Cor</th>
-          </tr>
-          <tbody>
-            <tr v-for="carro in carrosAssociados" :key="carro.id"
-                 :class="{'selected': carro === carroSelecionado}"
-                 @click="selecionaCarro(carro);">
-              <td>{{carro.id}}</td>
-              <td>{{carro.modelo}}</td> 
-              <td>{{carro.cor}}</td>
+            <tbody>
+              <tr v-for="carro in carrosDisponiveis" :key="carro.id" 
+                  :class="{'selected': carro === carroSelecionado}"
+                  @click="selecionaCarro(carro);">
+                <td>{{carro.id}}</td>
+                <td>{{carro.modelo}}</td> 
+                <td>{{carro.cor}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="col-sm-2">
+          <button @click="desassocia()" :disabled="this.pessoaSelecionada.id == null">&lt;&lt;</button>
+          <button @click="associa()" :disabled="this.pessoaSelecionada.id == null">&gt;&gt;</button>
+        </div>
+        <div class="col-sm-5">
+          <table class="table" style="width:100%">
+            <tr>
+              <th>Id</th>
+              <th>Modelo</th> 
+              <th>Cor</th>
             </tr>
-          </tbody>
-        </table>
+            <tbody>
+              <tr v-for="carro in carrosAssociados" :key="carro.id"
+                  :class="{'selected': carro === carroSelecionado}"
+                  @click="selecionaCarro(carro);">
+                <td>{{carro.id}}</td>
+                <td>{{carro.modelo}}</td> 
+                <td>{{carro.cor}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
+      <button class="form-control btn-success" @click="salvar()">Salvar alterações</button>
     </div>
-    <button class="form-control btn-success" @click="salvar()">Salvar alterações</button>
+    <div v-if="!mostrarSecaoCarros">
+      <h2>Usuário não tem a autorização para gerenciar essa seção</h2>
+    </div>
   </div>
+  
 </template>
 
 <script>
@@ -61,6 +67,7 @@ export default {
   name: 'SliceComponent',
   data() {
     return {
+      mostrarSecaoCarros: true,
       carroSelecionado: {},
       pessoaSelecionada: {},
       carrosDisponiveis: [],
@@ -79,17 +86,22 @@ export default {
   },
   methods:{
     atualizaCarrosDisponiveis(){
-      axios.get('/automoveis?disponiveis=true', { headers: { Accept: 'application/json' } })
+      axios.get('/automoveis?disponiveis=true', { headers: { Accept: 'application/json', Authorization: this.$store.state.token}})
       .then(res => {
         this.carrosDisponiveis = res.data;
-      }).catch(error => console.log(error))
+      }).catch(error => {
+          if (error.response.status === 403) {
+            this.mostrarSecaoCarros = false;
+          }
+        console.log(error)
+      })
     },
     atualizaCarrosAssociados() {
       if (this.pessoaSelecionada.id == null) {
         this.carrosAssociados = [];
       } else {
         axios.get('/automoveis?pessoaFisica='+this.pessoaSelecionada.id, 
-          { headers: { Accept: 'application/json' } })
+          { headers: { Accept: 'application/json', Authorization: this.$store.state.token}})
         .then(res => {
           this.carrosAssociados = res.data;
         }).catch(error => console.log(error))
@@ -103,7 +115,7 @@ export default {
       this.carrosAssociados.forEach(function(carro){
         conjunto.push(carro);
       })
-      axios.post('/automoveis', conjunto)
+      axios.post('/automoveis', conjunto, {headers: { Authorization: this.$store.state.token}})
       .then(res => {
         this.atualizaCarrosDisponiveis();
         this.pessoaSelecionada = {};

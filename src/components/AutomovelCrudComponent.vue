@@ -1,52 +1,57 @@
 <template>
   <div id="automovel-crud-componente" class="componente">
-    <h3>Cadastro Carros</h3>
-    <table id="crudauto">
-      <!--<tr>
-        <td>
-          ID:</td><td> <input type="text" name="id">
-        </td>
-      </tr>-->
-      <tr>
-        <td>
-          Modelo:</td>
-        <td>
-          <input type="text" v-model="carroEdit.modelo">
-        </td>
-      </tr>
-      <tr>
-        <td>
-          Cor:
-        </td>
-        <td> 
-          <input type="text" v-model="carroEdit.cor">
-        </td>
-      </tr>
-      <tr>
-        <td>
-          RENAVAM:
-        </td>
-        <td>
-          <input type="text" v-model="carroEdit.renavam">
-        </td>
-      <tr>
-        <td></td><td><button v-on:click="salvarCarro()" >Enviar</button></td>
-      </tr>
-    </table>
-    <table class="table">
-       <tr>
-          <th>Id</th>
-          <th>Modelo</th> 
-          <th>Cor</th>
+    <div v-if="mostrarSecaoCarros">
+      <h3>Cadastro Carros</h3>
+      <table id="crudauto">
+        <!--<tr>
+          <td>
+            ID:</td><td> <input type="text" name="id">
+          </td>
+        </tr>-->
+        <tr>
+          <td>
+            Modelo:</td>
+          <td>
+            <input type="text" v-model="carroEdit.modelo">
+          </td>
         </tr>
-        <tbody>
-          <tr v-for="carro in carros" :key="carro.id">
-            <td>{{carro.id}}</td>
-            <td>{{carro.modelo}}</td> 
-            <td>{{carro.cor}}</td>
+        <tr>
+          <td>
+            Cor:
+          </td>
+          <td> 
+            <input type="text" v-model="carroEdit.cor">
+          </td>
+        </tr>
+        <tr>
+          <td>
+            RENAVAM:
+          </td>
+          <td>
+            <input type="text" v-model="carroEdit.renavam">
+          </td>
+        <tr>
+          <td></td><td><button v-on:click="salvarCarro()" >Enviar</button></td>
+        </tr>
+      </table>
+      <table class="table">
+        <tr>
+            <th>Id</th>
+            <th>Modelo</th> 
+            <th>Cor</th>
           </tr>
-        </tbody>
-    </table>
+          <tbody>
+            <tr v-for="carro in carros" :key="carro.id">
+              <td>{{carro.id}}</td>
+              <td>{{carro.modelo}}</td> 
+              <td>{{carro.cor}}</td>
+            </tr>
+          </tbody>
+      </table>
+    </div>
+    <div v-if="!mostrarSecaoCarros">
+      <h2>Usuário não tem a autorização para gerenciar essa seção</h2>
+    </div>
   </div>
 </template>
 
@@ -57,22 +62,14 @@ export default {
   name: 'AutomovelCrudComponent',
   data() {
     return {
-      carroEdit: {}
+      mostrarSecaoCarros: true,
+      carroEdit: {},
+      carros: []
     } 
-  },
-  computed: {
-    carros: {
-      get () {
-        return this.$store.state.carros
-      },
-      set (valor) {
-        this.$store.state.carros = valor
-      }
-    }
   },
   methods:{
     salvarCarro() {
-      axios.post('/automovel', this.carroEdit)
+      axios.post('/automovel', this.carroEdit, {headers: { Authorization: this.$store.state.token}})
       .then(res => {
         this.carros = res.data
         this.obtemListaCarros();
@@ -80,10 +77,15 @@ export default {
       }).catch(error => console.log(error))
     },
     obtemListaCarros() {
-      axios.get('/automoveis', { headers: { Accept: 'application/json' } })
+      axios.get('/automoveis', { headers: { Accept: 'application/json', Authorization: this.$store.state.token}})
       .then(res => {
         this.carros = res.data
-      }).catch(error => console.log(error))
+      }).catch(error => {
+        if (error.response.status === 403) {
+          this.mostrarSecaoCarros = false;
+        }
+        console.log(error);
+      })
     }
   },
   created () {
